@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sheep — The Financial Passport (Interactive Demo)</title>
+  <!-- Google Fonts: Prompt & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ============================================================
+       THEME COLOR PALETTE (Vibrant Pink & Warm Eye-Friendly Light)
+       ============================================================ */
+    :root {
+      --color-primary-pink: #FF4B8B;
+      --color-primary-hover: #E03A75;
+      --color-soft-pink: #FFE8F1;
+      --color-cream-bg: #FAF5F0;
+      --color-card-bg: #FFFFFF;
+      --color-dark-brown: #3D2B28;
+      --color-medium-brown: #6E534E;
+      --color-text-dark: #2A1D1A;
+      --color-text-muted: #8C7571;
+      --color-success: #00B87C;
+      --color-success-bg: #E6F8F2;
+      --color-warning: #FF9800;
+      --color-warning-bg: #FFF3E0;
+      --shadow-card: 0 12px 30px -8px rgba(255, 75, 139, 0.14), 0 4px 12px rgba(61, 43, 40, 0.04);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', 'Inter', -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(135deg, #F8E5EC 0%, #FAF5F0 50%, #F5E8EE 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 10px;
+      color: var(--color-text-dark);
+    }
+
+    /* ============================================================
+       IPHONE 18 DEVICE MOCKUP FRAME
+       ============================================================ */
+    .iphone-18-frame {
+      width: 100%;
+      max-width: 415px;
+      height: 855px;
+      background: #1E1B1A;
+      border-radius: 56px;
+      padding: 12px;
+      box-shadow: 0 30px 80px -20px rgba(61, 43, 40, 0.35), 0 0 0 2px rgba(255, 255, 255, 0.25) inset;
+      position: relative;
+    }
+
+    .screen-container {
+      width: 100%;
+      height: 100%;
+      background-color: var(--color-cream-bg);
+      border-radius: 46px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Dynamic Island */
+    .dynamic-island {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 30px;
+      background: #000000;
+      border-radius: 20px;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+    .dynamic-island .camera-lens {
+      width: 10px;
+      height: 10px;
+      background: #111;
+      border-radius: 50%;
+      border: 1px solid #222;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 48px;
+      padding: 14px 24px 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-dark);
+      z-index: 190;
+    }
+
+    /* App Body */
+    .app-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 18px 80px 18px;
+      scroll-behavior: smooth;
+    }
+    .app-body::-webkit-scrollbar { display: none; }
+
+    /* Screen Views State Machine */
+    .view-screen {
+      display: none;
+      animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .view-screen.active {
+      display: block;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* UI Cards */
+    .card {
+      background: var(--color-card-bg);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid rgba(255, 75, 139, 0.08);
+    }
+
+    /* Inputs */
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #E2D5D0;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      color: var(--color-text-dark);
+      background: #FFFFFF;
+      outline: none;
+      transition: all 0.2s ease;
+      margin-bottom: 10px;
+    }
+    .input-field:focus {
+      border-color: var(--color-primary-pink);
+      box-shadow: 0 0 0 3px rgba(255, 75, 139, 0.15);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      background: var(--color-primary-pink);
+      color: #FFFFFF;
+      border: none;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(255, 75, 139, 0.35);
+      transition: all 0.2s ease;
+    }
+    .btn-primary:active { transform: scale(0.98); background: var(--color-primary-hover); }
+
+    .btn-line {
+      width: 100%;
+      background: #06C755;
+      color: #FFFFFF;
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .btn-google {
+      width: 100%;
+      background: #FFFFFF;
+      color: var(--color-text-dark);
+      border: 1.5px solid #E2D5D0;
+      padding: 11px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-small-action {
+      background: var(--color-soft-pink);
+      color: var(--color-primary-pink);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-small-action:active { transform: scale(0.95); }
+
+    /* Language Switcher */
+    .lang-selector {
+      display: flex;
+      gap: 5px;
+      background: #EFE6E1;
+      padding: 4px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+    .lang-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 7px 0;
+      font-size: 11.5px;
+      font-weight: 700;
+      border-radius: 10px;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lang-btn.active {
+      background: var(--color-primary-pink);
+      color: #FFFFFF;
+      box-shadow: 0 4px 10px rgba(255, 75, 139, 0.3);
+    }
+
+    /* Filter Tabs for Loans Screen */
+    .filter-tabs {
+      display: flex;
+      background: #EFE6E1;
+      padding: 3px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .filter-tab-btn {
+      flex: 1;
+      padding: 8px 0;
+      border: none;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: transparent;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-tab-btn.active {
+      background: #FFFFFF;
+      color: var(--color-dark-brown);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* Platform Item Toggle Row */
+    .platform-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #F6ECE8;
+    }
+    .platform-row:last-child { border-bottom: none; }
+    
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #E2D5D0; transition: .3s; border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--color-primary-pink); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* Bottom Navigation Bar (5 Items) */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 74px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255, 75, 139, 0.12);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 14px;
+      z-index: 180;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--color-text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    .nav-item.active {
+      color: var(--color-primary-pink);
+      font-weight: 800;
+    }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 4px;
+      background: var(--color-dark-brown);
+      border-radius: 2px;
+      opacity: 0.25;
+      z-index: 200;
+    }
+
+    .badge-pill {
+      background: var(--color-soft-pink);
+      color: var(--color-primary-pink);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    /* Progress Bar */
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #EFE6E1;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--color-primary-pink);
+      border-radius: 3px;
+    }
+
+    /* Setting List Item */
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #F6ECE8;
+      cursor: pointer;
+    }
+    .setting-item:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       IPHONE 18 DEVICE FRAME
+       ============================================================ -->
+  <div class="iphone-18-frame">
+    <div class="screen-container">
+      
+      <!-- Dynamic Island -->
+      <div class="dynamic-island">
+        <div class="camera-lens"></div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 9px; color: #FFF; font-weight: 700;">SHEEP ONLINE</span>
+          <div style="width: 6px; height: 6px; background: #00E676; border-radius: 50%;"></div>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span>09:41</span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <i data-lucide="wifi" style="width: 14px; height: 14px;"></i>
+          <i data-lucide="battery" style="width: 16px; height: 16px;"></i>
+        </div>
+      </div>
+
+      <!-- App Body (Scrollable Screen Container) -->
+      <div class="app-body">
+
+        <!-- ============================================================
+             SCREEN 0: LOGIN & ONBOARDING (NAME & PHONE INPUT)
+             ============================================================ -->
+        <div id="screen-login" class="view-screen active">
+          
+          <!-- Language Selector Row (5 Languages) -->
+          <div style="text-align: center; margin-top: 4px; margin-bottom: 10px;">
+            <p style="font-size: 10.5px; color: var(--color-text-muted); margin-bottom: 5px; font-weight: 700;" id="txt-choose-lang">SELECT LANGUAGE / เลือกภาษา</p>
+            <div class="lang-selector">
+              <button class="lang-btn active" onclick="setLang('en')">EN</button>
+              <button class="lang-btn" onclick="setLang('th')">TH</button>
+              <button class="lang-btn" onclick="setLang('es')">ES</button>
+              <button class="lang-btn" onclick="setLang('zh')">ZH</button>
+              <button class="lang-btn" onclick="setLang('ru')">RU</button>
+            </div>
+          </div>
+
+          <!-- Hero Brand Card with Vector Sheep Logo (INLINE SVG) -->
+          <div style="text-align: center; padding: 18px 14px; background: #FFFFFF; border-radius: var(--radius-xl); box-shadow: var(--shadow-card); margin-bottom: 12px; border: 1px solid rgba(255, 75, 139, 0.12);">
+            
+            <!-- Inline SVG Vector Sheep Logo -->
+            <svg width="76" height="76" viewBox="0 0 200 200" style="margin: 0 auto; display: block; filter: drop-shadow(0px 8px 16px rgba(255, 75, 139, 0.25));">
+              <rect width="200" height="200" fill="#FF4B8B" rx="44"/>
+              <path d="M100 32 C118 20 142 26 152 42 C168 35 188 48 186 66 C198 80 195 102 186 116 C194 132 185 154 168 162 C155 174 132 178 118 172 C104 180 82 178 70 168 C52 172 34 158 30 140 C18 126 18 102 28 88 C20 70 34 48 52 44 C62 28 84 22 100 32 Z" fill="#FFF5EB"/>
+              <path d="M38 72 C20 60 25 82 42 88 Z" fill="#FFF5EB"/>
+              <path d="M40 74 C28 66 32 78 41 82 Z" fill="#FFB6D1"/>
+              <path d="M162 72 C180 60 175 82 158 88 Z" fill="#FFF5EB"/>
+              <path d="M160 74 C172 66 168 78 159 82 Z" fill="#FFB6D1"/>
+              <ellipse cx="100" cy="112" rx="52" ry="42" fill="#FCEAD0"/>
+              <ellipse cx="78" cy="100" rx="11" ry="15" fill="#2A1D1A"/>
+              <circle cx="74" cy="95" r="4.5" fill="#FFFFFF"/>
+              <ellipse cx="122" cy="100" rx="11" ry="15" fill="#2A1D1A"/>
+              <circle cx="118" cy="95" r="4.5" fill="#FFFFFF"/>
+              <path d="M100 114 L100 122 M90 124 Q100 133 110 124" stroke="#2A1D1A" stroke-width="4" stroke-linecap="round" fill="none"/>
+            </svg>
+
+            <h1 style="font-size: 22px; color: var(--color-dark-brown); font-weight: 800; margin-top: 8px;">Sheep</h1>
+            <p style="font-size: 10.5px; color: var(--color-primary-pink); font-weight: 800; letter-spacing: 0.6px; margin-bottom: 4px;">OH MY SHEEP! STARTUP</p>
+            <p style="font-size: 12px; color: var(--color-medium-brown); line-height: 1.35; font-weight: 500;" id="txt-tagline">The Financial Passport.<br>Income you can prove, credit you can use.</p>
+          </div>
+
+          <!-- Interactive Login & Name Form -->
+          <div class="card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <span style="font-size: 12.5px; font-weight: 800; color: var(--color-dark-brown);" id="txt-login-header">Account Login / Register</span>
+              <span class="badge-pill">PDPA 2026</span>
+            </div>
+
+            <!-- Full Name Input -->
+            <label style="font-size: 11px; font-weight: 700; color: var(--color-medium-brown); display: block; margin-bottom: 4px;" id="lbl-fullname">
+              Full Name (ชื่อ-นามสกุล)
+            </label>
+            <input type="text" id="input-fullname" class="input-field" value="Paphidchaya Jaiboon" placeholder="Enter your full name">
+
+            <!-- Mobile Phone Input -->
+            <label style="font-size: 11px; font-weight: 700; color: var(--color-medium-brown); display: block; margin-bottom: 4px;" id="lbl-phone">
+              Mobile Phone / เบอร์โทรศัพท์
+            </label>
+            <input type="tel" id="input-phone" class="input-field" value="081-234-5678" placeholder="08X-XXX-XXXX">
+
+            <!-- Quick Social Logins -->
+            <button class="btn-line" onclick="handleLogin()">
+              <i data-lucide="message-circle" style="width: 18px;"></i>
+              <span>Continue with LINE</span>
+            </button>
+
+            <button class="btn-google" onclick="handleLogin()">
+              <i data-lucide="globe" style="width: 18px;"></i>
+              <span>Sign in with Google</span>
+            </button>
+
+            <!-- Main Submit Button -->
+            <button class="btn-primary" onclick="handleLogin()" id="btn-login-action">
+              <i data-lucide="log-in" style="width: 18px;"></i>
+              <span id="lbl-login-btn">Log In & Start Verification</span>
+            </button>
+          </div>
+
+          <!-- Bottom Security Badge -->
+          <div style="text-align: center; font-size: 10px; color: var(--color-text-muted); line-height: 1.3;" id="txt-sec-footer">
+            🔒 Bank of Thailand (BOT) Sandbox Compliant • 256-bit Encryption
+          </div>
+
+        </div>
+
+        <!-- ============================================================
+             SCREEN 0.5: SECURITY PIN SCREEN
+             ============================================================ -->
+        <div id="screen-pin" class="view-screen">
+          <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+            <div style="width: 50px; height: 50px; background: var(--color-soft-pink); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; color: var(--color-primary-pink);">
+              <i data-lucide="lock" style="width: 26px;"></i>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 800; color: var(--color-dark-brown);" id="txt-pin-title">Enter Security PIN</h3>
+            <p style="font-size: 12px; color: var(--color-text-muted); margin-top: 4px;" id="txt-pin-sub">Confirm identity to access financial records</p>
+          </div>
+
+          <div class="card" style="text-align: center; padding: 24px;">
+            <div style="display: flex; justify-content: center; gap: 14px; margin-bottom: 24px;">
+              <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--color-primary-pink);"></div>
+              <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--color-primary-pink);"></div>
+              <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--color-primary-pink);"></div>
+              <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--color-primary-pink);"></div>
+            </div>
+
+            <!-- PIN Keypad Simulation -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 240px; margin: 0 auto;">
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">1</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">2</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">3</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">4</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">5</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">6</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">7</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">8</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">9</button>
+              <div></div>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px;" onclick="pinComplete()">0</button>
+              <button class="btn-google" style="margin-bottom:0; padding: 12px; color: var(--color-primary-pink);" onclick="pinComplete()">✓</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================
+             SCREEN 1: DATA SOURCES & CONNECTIVITY
+             ============================================================ -->
+        <div id="screen-connect" class="view-screen">
+          <div style="margin-bottom: 14px;">
+            <div class="badge-pill" style="display: inline-block; margin-bottom: 4px;" id="txt-step-badge">STEP 1 OF 2</div>
+            <h2 style="font-size: 20px; color: var(--color-dark-brown); font-weight: 800;" id="txt-connect-title">Connect Income Sources</h2>
+            <p style="font-size: 12px; color: var(--color-text-muted);" id="txt-connect-sub">Sync multi-platform streams for 4Crates Cross-Validation</p>
+          </div>
+
+          <!-- Interactive Platform Connect List -->
+          <div class="card">
+            <!-- TikTok Shop -->
+            <div class="platform-row">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; background: #000000; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #FFF;">
+                  <i data-lucide="video" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13.5px; font-weight: 700;">TikTok Shop TH</h4>
+                  <p style="font-size: 11px; color: var(--color-primary-pink); font-weight: 700;">฿68,500 / month</p>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked onchange="recalculateScore()">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Upwork Global -->
+            <div class="platform-row">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; background: #14A800; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #FFF;">
+                  <i data-lucide="globe" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13.5px; font-weight: 700;">Upwork Freelance</h4>
+                  <p style="font-size: 11px; color: var(--color-primary-pink); font-weight: 700;">$1,200 (฿42,500) / mo</p>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked onchange="recalculateScore()">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Shopee Seller -->
+            <div class="platform-row">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; background: #EE4D2D; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #FFF;">
+                  <i data-lucide="shopping-bag" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13.5px; font-weight: 700;">Shopee Seller Hub</h4>
+                  <p style="font-size: 11px; color: var(--color-primary-pink); font-weight: 700;">฿14,000 / month</p>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked onchange="recalculateScore()">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Bank e-Statement OCR -->
+            <div class="platform-row">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; background: #006633; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #FFF;">
+                  <i data-lucide="file-text" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13.5px; font-weight: 700;">Bank e-Statement OCR</h4>
+                  <p style="font-size: 11px; color: var(--color-success); font-weight: 700;">KBank & SCB Verified</p>
+                </div>
+              </div>
+              <i data-lucide="check-circle-2" style="color: var(--color-success); width: 22px;"></i>
+            </div>
+          </div>
+
+          <!-- Engine Status Card -->
+          <div class="card" style="background: var(--color-soft-pink); border-color: rgba(255, 75, 139, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12px; font-weight: 800; color: var(--color-dark-brown);" id="txt-engine-title">4Crates Engine Status</span>
+              <span style="font-size: 11px; font-weight: 800; color: var(--color-primary-pink);">AUTHENTICATED</span>
+            </div>
+            <p style="font-size: 11px; color: var(--color-medium-brown); line-height: 1.35;" id="txt-engine-info">
+              ✓ Cross-validating sales GMV against incoming bank deposits to eliminate fake statements.
+            </p>
+          </div>
+
+          <button class="btn-primary" onclick="goToScreen('screen-dashboard')" id="btn-calc-action">
+            <span id="lbl-calc-btn">Calculate SHEEP-Score</span>
+            <i data-lucide="arrow-right" style="width: 18px;"></i>
+          </button>
+        </div>
+
+        <!-- ============================================================
+             SCREEN 2: SHEEP-SCORE DASHBOARD & GRAPH
+             ============================================================ -->
+        <div id="screen-dashboard" class="view-screen">
+          
+          <!-- User Profile & Status Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <p style="font-size: 11px; color: var(--color-text-muted); font-weight: 600;" id="txt-user-welcome">Verified Passport Holder</p>
+              <h3 style="font-size: 17px; color: var(--color-dark-brown); font-weight: 800;" class="user-display-fullname">Paphidchaya Jaiboon</h3>
+            </div>
+            <span class="badge-pill" style="background: var(--color-success-bg); color: var(--color-success);">GRADE A</span>
+          </div>
+
+          <!-- Main SHEEP-Score Card -->
+          <div class="card" style="background: linear-gradient(135deg, #3D2B28 0%, #5C3D38 100%); color: #FFFFFF; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.8;" id="txt-score-label">SHEEP-Score Rating</p>
+                <div style="display: flex; align-items: baseline; gap: 6px; margin: 4px 0;">
+                  <span style="font-size: 42px; font-weight: 800; color: #FFFFFF;" id="num-sheep-score">780</span>
+                  <span style="font-size: 14px; opacity: 0.7;">/ 990</span>
+                </div>
+              </div>
+              <div style="background: var(--color-primary-pink); padding: 8px 14px; border-radius: 14px; text-align: center; box-shadow: 0 4px 12px rgba(255, 75, 139, 0.4);">
+                <span style="font-size: 10px; font-weight: 700; display: block; opacity: 0.9;">CAPABILITY</span>
+                <span style="font-size: 13px; font-weight: 800;">HIGH</span>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 12px;">
+              <div>
+                <span style="opacity: 0.7;" id="lbl-total-income">Verified Income</span>
+                <p style="font-weight: 800; font-size: 15px; color: #FFF;" id="txt-income-total">฿125,000 / mo</p>
+              </div>
+              <div style="text-align: right;">
+                <span style="opacity: 0.7;" id="lbl-default-risk">NPL Default Risk</span>
+                <p style="font-weight: 800; font-size: 15px; color: #81C784;">LOW (0.2%)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Card with Timeframe Toggles -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="font-size: 13px; font-weight: 800; color: var(--color-dark-brown);" id="txt-chart-header">Cash Flow Forecast (AI)</h4>
+              <div style="display: flex; gap: 4px; background: #F6ECE8; padding: 2px; border-radius: 8px;">
+                <button class="btn-google" style="padding: 3px 8px; font-size: 10px; margin-bottom:0;" onclick="updateChart('1M')">1M</button>
+                <button class="btn-google" style="padding: 3px 8px; font-size: 10px; background: var(--color-primary-pink); color: #FFF; border:none; margin-bottom:0;" onclick="updateChart('3M')">3M</button>
+                <button class="btn-google" style="padding: 3px 8px; font-size: 10px; margin-bottom:0;" onclick="updateChart('6M')">6M</button>
+              </div>
+            </div>
+            <div style="height: 135px; position: relative;">
+              <canvas id="cashflowChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Activity Log -->
+          <div class="card" style="padding: 14px;">
+            <h4 style="font-size: 12.5px; font-weight: 800; color: var(--color-dark-brown); margin-bottom: 10px;" id="txt-recent-activity">Recent Verified Activity</h4>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 0; border-bottom: 1px solid #F6ECE8;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="check-circle" style="width: 14px; color: var(--color-success);"></i>
+                <span>TikTok Shop Income Synced</span>
+              </div>
+              <span style="color: var(--color-text-muted);">2 mins ago</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 0;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="shield" style="width: 14px; color: var(--color-primary-pink);"></i>
+                <span>Passport Scanned by Virtual Bank</span>
+              </div>
+              <span style="color: var(--color-text-muted);">Yesterday</span>
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="goToScreen('screen-loans')" id="btn-export-action">
+            <i data-lucide="badge-percent" style="width: 18px;"></i>
+            <span>Track Active Loans & Installments</span>
+          </button>
+        </div>
+
+        <!-- ============================================================
+             SCREEN 3: LOANS & INSTALLMENTS TRACKER (กู้ / ผ่อน)
+             ============================================================ -->
+        <div id="screen-loans" class="view-screen">
+          <div style="margin-bottom: 12px;">
+            <div class="badge-pill" style="display: inline-block; margin-bottom: 4px;">ACTIVE CREDIT & REPAYMENTS</div>
+            <h2 style="font-size: 19px; color: var(--color-dark-brown); font-weight: 800;" id="txt-loans-title">Active Loans & Installments</h2>
+            <p style="font-size: 11.5px; color: var(--color-text-muted);" id="txt-loans-sub">Track loan applications and monthly repayments</p>
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="filter-tabs">
+            <button class="filter-tab-btn active" onclick="filterLoanCards('all', this)" id="btn-filter-all">All / ทั้งหมด</button>
+            <button class="filter-tab-btn" onclick="filterLoanCards('applying', this)" id="btn-filter-applying">Applying / ยื่นกู้</button>
+            <button class="filter-tab-btn" onclick="filterLoanCards('repaying', this)" id="btn-filter-repaying">Repaying / ผ่อนอยู่</button>
+          </div>
+
+          <!-- LOAN ITEM 1: Mortgage Loan Application (Applying) -->
+          <div class="card loan-card loan-applying">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 34px; height: 34px; background: #E1F5FE; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #0288D1;">
+                  <i data-lucide="home" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13px; font-weight: 800; color: var(--color-dark-brown);">Home Mortgage Loan</h4>
+                  <p style="font-size: 10.5px; color: var(--color-text-muted);">Virtual Bank Pilot (CLICX / BOT Sandbox)</p>
+                </div>
+              </div>
+              <span class="badge-pill" style="background: var(--color-warning-bg); color: var(--color-warning);" id="lbl-status-review">UNDER REVIEW</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px;">
+              <span style="font-size: 11px; color: var(--color-medium-brown);">Requested Limit:</span>
+              <span style="font-size: 15px; font-weight: 800; color: var(--color-primary-pink);">฿3,500,000</span>
+            </div>
+
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: 80%;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--color-text-muted);">
+              <span>Cross-Validation Passed (100%)</span>
+              <span>Underwriting 80%</span>
+            </div>
+          </div>
+
+          <!-- LOAN ITEM 2: Business Expansion Credit Line (Approved) -->
+          <div class="card loan-card loan-applying">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 34px; height: 34px; background: var(--color-success-bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--color-success);">
+                  <i data-lucide="briefcase" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13px; font-weight: 800; color: var(--color-dark-brown);">Business Expansion Line</h4>
+                  <p style="font-size: 10.5px; color: var(--color-text-muted);">LINE BK / Kasikornbank</p>
+                </div>
+              </div>
+              <span class="badge-pill" style="background: var(--color-success-bg); color: var(--color-success);" id="lbl-status-approved">APPROVED</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <div>
+                <span style="font-size: 10.5px; color: var(--color-medium-brown);">Approved Limit:</span>
+                <p style="font-size: 15px; font-weight: 800; color: var(--color-dark-brown);">฿150,000</p>
+              </div>
+              <button class="btn-small-action" onclick="alert('Transferring ฿150,000 to your bank account!')" id="lbl-btn-drawdown">Drawdown Funds</button>
+            </div>
+          </div>
+
+          <!-- REPAYMENT ITEM 3: Creator Work Equipment (MacBook Pro) (Repaying) -->
+          <div class="card loan-card loan-repaying">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 34px; height: 34px; background: var(--color-soft-pink); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--color-primary-pink);">
+                  <i data-lucide="laptop" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13px; font-weight: 800; color: var(--color-dark-brown);">MacBook Creator Financing</h4>
+                  <p style="font-size: 10.5px; color: var(--color-text-muted);">6 / 12 Months Repaid (50%)</p>
+                </div>
+              </div>
+              <span class="badge-pill" id="lbl-status-repaying">IN REPAYMENT</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 6px; border-top: 1px dashed #EADBD6;">
+              <div>
+                <span style="font-size: 10.5px; color: var(--color-medium-brown);">Monthly Installment:</span>
+                <p style="font-size: 14px; font-weight: 800; color: var(--color-primary-pink);">฿4,200 / month</p>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 10px; color: var(--color-success); font-weight: 700;">✓ Auto-Pay Synced</span>
+                <p style="font-size: 10px; color: var(--color-text-muted);">Due: Oct 25, 2026</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- REPAYMENT ITEM 4: Personal Credit Line (Repaying) -->
+          <div class="card loan-card loan-repaying">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 34px; height: 34px; background: #FFF3E0; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--color-warning);">
+                  <i data-lucide="credit-card" style="width: 18px;"></i>
+                </div>
+                <div>
+                  <h4 style="font-size: 13px; font-weight: 800; color: var(--color-dark-brown);">SCB Easy Credit Line</h4>
+                  <p style="font-size: 10.5px; color: var(--color-text-muted);">Remaining: ฿12,500</p>
+                </div>
+              </div>
+              <span class="badge-pill" id="lbl-status-up-to-date">UP TO DATE</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <div>
+                <span style="font-size: 10.5px; color: var(--color-medium-brown);">Min Repayment:</span>
+                <p style="font-size: 14px; font-weight: 800; color: var(--color-dark-brown);">฿2,500 / month</p>
+              </div>
+              <button class="btn-small-action" onclick="alert('Payment Successful!')" id="lbl-btn-paynow">Pay Now</button>
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="goToScreen('screen-profile')">
+            <i data-lucide="user" style="width: 18px;"></i>
+            <span>View User Profile & Passport</span>
+          </button>
+        </div>
+
+        <!-- ============================================================
+             SCREEN 4: USER PROFILE & FINANCIAL PASSPORT
+             ============================================================ -->
+        <div id="screen-profile" class="view-screen">
+          
+          <!-- Mode Switcher: Profile View vs Passport View -->
+          <div style="display: flex; background: #EFE6E1; padding: 3px; border-radius: 12px; margin-bottom: 12px;">
+            <button id="btn-subtab-profile" style="flex: 1; padding: 8px; border: none; border-radius: 9px; font-size: 11.5px; font-weight: 800; background: #FFF; color: var(--color-dark-brown); cursor: pointer;" onclick="switchProfileSubTab('profile')">
+              User Profile
+            </button>
+            <button id="btn-subtab-passport" style="flex: 1; padding: 8px; border: none; border-radius: 9px; font-size: 11.5px; font-weight: 800; background: transparent; color: var(--color-text-muted); cursor: pointer;" onclick="switchProfileSubTab('passport')">
+              Verified Passport
+            </button>
+          </div>
+
+          <!-- SUBTAB 1: USER PROFILE & SETTINGS -->
+          <div id="subtab-profile-content">
+            <!-- Profile Card Header -->
+            <div class="card" style="text-align: center; padding: 18px;">
+              <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #FF4B8B, #3D2B28); border-radius: 50%; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; margin: 0 auto 10px auto; border: 3px solid var(--color-soft-pink);">
+                PJ
+              </div>
+              <h3 style="font-size: 16px; font-weight: 800; color: var(--color-dark-brown);" class="user-display-fullname">Paphidchaya Jaiboon</h3>
+              <p style="font-size: 11px; color: var(--color-primary-pink); font-weight: 700; margin-top: 2px;">Student ID: 67050656 (KMITL FinTech)</p>
+              <div style="display: flex; justify-content: center; gap: 6px; margin-top: 8px;">
+                <span class="badge-pill" style="background: var(--color-success-bg); color: var(--color-success);">KYC VERIFIED</span>
+                <span class="badge-pill">GRADE A (780)</span>
+              </div>
+            </div>
+
+            <!-- Settings & Account Options -->
+            <div class="card" style="padding: 14px;">
+              <h4 style="font-size: 12.5px; font-weight: 800; color: var(--color-dark-brown); margin-bottom: 10px;" id="txt-profile-settings">Account & Security Settings</h4>
+
+              <div class="setting-item">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <i data-lucide="shield-check" style="width: 18px; color: var(--color-primary-pink);"></i>
+                  <span style="font-size: 12px; font-weight: 600;">PDPA Data Consent Settings</span>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; color: var(--color-text-muted);"></i>
+              </div>
+
+              <div class="setting-item">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <i data-lucide="building-2" style="width: 18px; color: var(--color-primary-pink);"></i>
+                  <span style="font-size: 12px; font-weight: 600;">Linked Bank Accounts (3)</span>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; color: var(--color-text-muted);"></i>
+              </div>
+
+              <div class="setting-item">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <i data-lucide="bell" style="width: 18px; color: var(--color-primary-pink);"></i>
+                  <span style="font-size: 12px; font-weight: 600;">Income Alerts & Credit Updates</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-item">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <i data-lucide="fingerprint" style="width: 18px; color: var(--color-primary-pink);"></i>
+                  <span style="font-size: 12px; font-weight: 600;">Face ID / Biometric Security</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <button class="btn-google" style="color: #D32F2F; border-color: #FFCDD2;" onclick="goToScreen('screen-login')">
+              <i data-lucide="log-out" style="width: 16px;"></i>
+              <span>Log Out</span>
+            </button>
+          </div>
+
+          <!-- SUBTAB 2: VERIFIED PASSPORT & B2B SIMULATOR -->
+          <div id="subtab-passport-content" style="display: none;">
+            
+            <!-- Mode Toggle inside Passport Tab -->
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+              <button class="btn-google" style="flex:1; padding: 6px; font-size: 10.5px; margin-bottom:0;" onclick="switchPassportMode('b2c')">User View</button>
+              <button class="btn-google" style="flex:1; padding: 6px; font-size: 10.5px; margin-bottom:0;" onclick="switchPassportMode('b2b')">B2B Bank Scanner API</button>
+            </div>
+
+            <!-- B2C Passport View -->
+            <div id="passport-view-b2c">
+              <div class="card" style="border: 2px solid var(--color-primary-pink); background: #FFFFFF; text-align: center; padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #EADBD6;">
+                  <span style="font-size: 12px; font-weight: 800; color: var(--color-dark-brown);">VERIFIED FINANCIAL PASSPORT</span>
+                  <span class="badge-pill">VALID / 2026</span>
+                </div>
+
+                <!-- QR Code with Center Sheep Icon -->
+                <div style="width: 140px; height: 140px; background: var(--color-cream-bg); border: 2px solid var(--color-dark-brown); border-radius: 16px; margin: 0 auto 12px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                  <i data-lucide="qr-code" style="width: 100px; height: 100px; color: var(--color-dark-brown);"></i>
+                  <div style="position: absolute; background: #FF4B8B; border-radius: 50%; padding: 4px; border: 2px solid #FFF;">
+                    <i data-lucide="smile" style="width: 16px; height: 16px; color: #FFF;"></i>
+                  </div>
+                </div>
+
+                <h4 style="font-size: 16px; color: var(--color-dark-brown); font-weight: 800;" class="user-display-fullname">Paphidchaya Jaiboon</h4>
+                <p style="font-size: 11px; color: var(--color-text-muted); margin-bottom: 10px;">ID Hash: 8f92a4...67050656</p>
+
+                <div style="background: var(--color-soft-pink); padding: 10px; border-radius: 12px; text-align: left; font-size: 11px; line-height: 1.5; color: var(--color-dark-brown);">
+                  <p>• <b>Verified Income:</b> <span id="passport-income">฿125,000 / month</span></p>
+                  <p>• <b>SHEEP-Score:</b> <span id="passport-score">780 (Grade A)</span></p>
+                  <p>• <b>Verification Engine:</b> Oh My Sheep! API</p>
+                </div>
+              </div>
+
+              <button class="btn-primary" onclick="alert('PDF Passport Downloaded Successfully!')">
+                <i data-lucide="download" style="width: 18px;"></i>
+                <span id="lbl-download-btn">Download PDF Passport</span>
+              </button>
+            </div>
+
+            <!-- B2B Bank Scanner API View -->
+            <div id="passport-view-b2b" style="display: none;">
+              <div class="card" style="background: #1E1B18; color: #00E676; font-family: monospace; padding: 14px; font-size: 10.5px; line-height: 1.5;">
+                <p style="color: #FFF; font-weight: 800; margin-bottom: 6px;">[B2B VERIFICATION API RESPONSE]</p>
+                <p>GET /v1/passport/verify?hash=8f92a4</p>
+                <p style="color: #FFF;">HTTP/1.1 200 OK</p>
+                <p>----------------------------------</p>
+                <p>{ "status": "VERIFIED_AUTHENTIC",</p>
+                <p>&nbsp;&nbsp;"company": "Oh My Sheep! Co., Ltd.",</p>
+                <p>&nbsp;&nbsp;"holder_name": "<span class="user-display-fullname">Paphidchaya Jaiboon</span>",</p>
+                <p>&nbsp;&nbsp;"score": 780,</p>
+                <p>&nbsp;&nbsp;"grade": "A",</p>
+                <p>&nbsp;&nbsp;"monthly_income_thb": 125000 }</p>
+              </div>
+
+              <div class="card" style="text-align: center; padding: 14px; background: var(--color-success-bg); border-color: var(--color-success);">
+                <h4 style="font-size: 13px; font-weight: 800; color: var(--color-success);" id="txt-bank-approved">✓ UNDERWRITING DECISION: APPROVED</h4>
+                <p style="font-size: 11px; color: var(--color-dark-brown); margin-top: 4px;" id="txt-bank-loan">Pre-approved for Mortgage up to ฿3,500,000 Baht</p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ============================================================
+           BOTTOM NAVIGATION BAR (5 TABS)
+           ============================================================ -->
+      <div class="bottom-nav">
+        <button class="nav-item active" onclick="goToScreen('screen-login')" id="nav-login">
+          <i data-lucide="home" style="width: 18px;"></i>
+          <span id="lbl-nav-home">Home</span>
+        </button>
+        <button class="nav-item" onclick="goToScreen('screen-connect')" id="nav-connect">
+          <i data-lucide="link" style="width: 18px;"></i>
+          <span id="lbl-nav-connect">Connect</span>
+        </button>
+        <button class="nav-item" onclick="goToScreen('screen-dashboard')" id="nav-dashboard">
+          <i data-lucide="bar-chart-2" style="width: 18px;"></i>
+          <span id="lbl-nav-score">Score</span>
+        </button>
+        <button class="nav-item" onclick="goToScreen('screen-loans')" id="nav-loans">
+          <i data-lucide="badge-percent" style="width: 18px;"></i>
+          <span id="lbl-nav-loans">Loans</span>
+        </button>
+        <button class="nav-item" onclick="goToScreen('screen-profile')" id="nav-profile">
+          <i data-lucide="user" style="width: 18px;"></i>
+          <span id="lbl-nav-profile">Profile</span>
+        </button>
+      </div>
+
+      <!-- Home Indicator Bar -->
+      <div class="home-indicator"></div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MULTILINGUAL DICTIONARY & SCRIPT LOGIC
+       ============================================================ -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    let currentUserName = "Paphidchaya Jaiboon";
+
+    // Handle Login Action
+    function handleLogin() {
+      const nameInput = document.getElementById('input-fullname').value.trim();
+      if(nameInput) {
+        currentUserName = nameInput;
+        // Update name across screens dynamically
+        document.querySelectorAll('.user-display-fullname').forEach(el => el.innerText = currentUserName);
+      }
+      goToScreen('screen-pin');
+    }
+
+    function pinComplete() {
+      goToScreen('screen-connect');
+    }
+
+    // Filter Loans & Repayments Cards
+    function filterLoanCards(category, btn) {
+      document.querySelectorAll('.filter-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('.loan-card');
+      cards.forEach(card => {
+        if(category === 'all') {
+          card.style.display = 'block';
+        } else if(category === 'applying') {
+          card.style.display = card.classList.contains('loan-applying') ? 'block' : 'none';
+        } else if(category === 'repaying') {
+          card.style.display = card.classList.contains('loan-repaying') ? 'block' : 'none';
+        }
+      });
+    }
+
+    // Switch Profile Subtabs
+    function switchProfileSubTab(sub) {
+      if(sub === 'profile') {
+        document.getElementById('subtab-profile-content').style.display = 'block';
+        document.getElementById('subtab-passport-content').style.display = 'none';
+        document.getElementById('btn-subtab-profile').style.background = '#FFF';
+        document.getElementById('btn-subtab-profile').style.color = 'var(--color-dark-brown)';
+        document.getElementById('btn-subtab-passport').style.background = 'transparent';
+        document.getElementById('btn-subtab-passport').style.color = 'var(--color-text-muted)';
+      } else {
+        document.getElementById('subtab-profile-content').style.display = 'none';
+        document.getElementById('subtab-passport-content').style.display = 'block';
+        document.getElementById('btn-subtab-passport').style.background = '#FFF';
+        document.getElementById('btn-subtab-passport').style.color = 'var(--color-dark-brown)';
+        document.getElementById('btn-subtab-profile').style.background = 'transparent';
+        document.getElementById('btn-subtab-profile').style.color = 'var(--color-text-muted)';
+      }
+    }
+
+    // 5-Language Translation Dictionary
+    const translations = {
+      en: {
+        chooseLang: "SELECT LANGUAGE / เลือกภาษา",
+        tagline: "The Financial Passport.<br>Income you can prove, credit you can use.",
+        loginHeader: "Account Login / Register",
+        lblFullname: "Full Name (ชื่อ-นามสกุล)",
+        lblPhone: "Mobile Phone / เบอร์โทรศัพท์",
+        loginBtn: "Log In & Start Verification",
+        secFooter: "🔒 Bank of Thailand (BOT) Sandbox Compliant • 256-bit Encryption",
+        pinTitle: "Enter Security PIN",
+        pinSub: "Confirm identity to access financial records",
+        stepBadge: "STEP 1 OF 2",
+        connectTitle: "Connect Income Sources",
+        connectSub: "Sync multi-platform streams for 4Crates Cross-Validation",
+        engineTitle: "4Crates Engine Status",
+        engineInfo: "✓ Cross-validating sales GMV against incoming bank deposits to eliminate fake statements.",
+        calcBtn: "Calculate SHEEP-Score",
+        userWelcome: "Verified Passport Holder",
+        scoreLabel: "SHEEP-Score Rating",
+        totalIncome: "Verified Income",
+        defaultRisk: "NPL Default Risk",
+        chartHeader: "Cash Flow Forecast (AI)",
+        recentActivity: "Recent Verified Activity",
+        exportBtn: "Export Verified Passport",
+        downloadBtn: "Download PDF Passport",
+        bankApproved: "✓ UNDERWRITING DECISION: APPROVED",
+        bankLoan: "Pre-approved for Mortgage up to ฿3,500,000 Baht",
+        loansTitle: "Active Loans & Installments",
+        loansSub: "Track loan applications and monthly repayments",
+        btnFilterAll: "All",
+        btnFilterApplying: "Applying",
+        btnFilterRepaying: "Repaying",
+        lblStatusReview: "UNDER REVIEW",
+        lblStatusApproved: "APPROVED",
+        lblStatusRepaying: "IN REPAYMENT",
+        lblStatusUpToDate: "UP TO DATE",
+        lblBtnDrawdown: "Drawdown Funds",
+        lblBtnPaynow: "Pay Now",
+        profileSettings: "Account & Security Settings",
+        navHome: "Home", navConnect: "Connect", navScore: "Score", navLoans: "Loans", navProfile: "Profile"
+      },
+      th: {
+        chooseLang: "เลือกภาษาที่คุณต้องการ",
+        tagline: "พาสปอร์ตทางการเงิน<br>รายได้ยืนยันได้ สินเชื่อเข้าถึงได้จริง",
+        loginHeader: "เข้าสู่ระบบ / ลงทะเบียนใช้งาน",
+        lblFullname: "ชื่อ-นามสกุล",
+        lblPhone: "เบอร์โทรศัพท์มือถือ",
+        loginBtn: "เข้าสู่ระบบและเริ่มตรวจสอบรายได้",
+        secFooter: "🔒 รองรับมาตรฐาน BOT Regulatory Sandbox และ PDPA 2566",
+        pinTitle: "ใส่รหัส PIN เพื่อความปลอดภัย",
+        pinSub: "ยืนยันตัวตนก่อนเข้าถึงข้อมูลทางการเงิน",
+        stepBadge: "ขั้นตอนที่ 1 จาก 2",
+        connectTitle: "เชื่อมต่อช่องทางรายได้",
+        connectSub: "ดึงข้อมูลหลายช่องทางเพื่อตรวจสอบด้วย 4Crates Engine",
+        engineTitle: "สถานะเครื่องมือ 4Crates Engine",
+        engineInfo: "✓ ตรวจสอบยอดขายตรงกับเงินเข้าบัญชีธนาคารเพื่อป้องกันสเตตเมนต์ปลอม",
+        calcBtn: "คำนวณคะแนน SHEEP-Score",
+        userWelcome: "ผู้ถือพาสปอร์ตทางการเงิน",
+        scoreLabel: "คะแนนเครดิต SHEEP-Score",
+        totalIncome: "รายได้สุทธิที่ยืนยันแล้ว",
+        defaultRisk: "อัตราความเสี่ยง NPL",
+        chartHeader: "ประมาณการกระแสเงินสด (AI)",
+        recentActivity: "ประวัติการยืนยันล่าสุด",
+        exportBtn: "ออกพาสปอร์ตทางการเงิน",
+        downloadBtn: "ดาวน์โหลดพาสปอร์ต (PDF)",
+        bankApproved: "✓ ผลการพิจารณาสินเชื่อ: อนุมัติ",
+        bankLoan: "ได้รับวงเงินสินเชื่อบ้านเบื้องต้นสูงสุด ฿3,500,000 บาท",
+        loansTitle: "รายการกู้และผ่อนชำระ",
+        loansSub: "ติดตามสถานะการยื่นกู้และค่างวดผ่อนชำระประจำเดือน",
+        btnFilterAll: "ทั้งหมด",
+        btnFilterApplying: "กำลังยื่นกู้",
+        btnFilterRepaying: "กำลังผ่อนอยู่",
+        lblStatusReview: "รอผลอนุมัติ",
+        lblStatusApproved: "อนุมัติแล้ว",
+        lblStatusRepaying: "กำลังผ่อนชำระ",
+        lblStatusUpToDate: "สถานะปกติ",
+        lblBtnDrawdown: "เบิกถอนเงิน",
+        lblBtnPaynow: "ชำระเงิน",
+        profileSettings: "การตั้งค่าบัญชีและความปลอดภัย",
+        navHome: "หน้าแรก", navConnect: "เชื่อมต่อ", navScore: "คะแนน", navLoans: "กู้ / ผ่อน", navProfile: "โปรไฟล์"
+      },
+      es: {
+        chooseLang: "SELECCIONAR IDIOMA",
+        tagline: "El Pasaporte Financiero.<br>Ingresos que puedes probar, crédito que puedes usar.",
+        loginHeader: "Inicio de sesión / Registro",
+        lblFullname: "Nombre completo",
+        lblPhone: "Teléfono móvil",
+        loginBtn: "Iniciar sesión y verificar",
+        secFooter: "🔒 Cumple con las normas del Banco de Tailandia y PDPA",
+        pinTitle: "Ingrese PIN de seguridad",
+        pinSub: "Confirma tu identidad para acceder",
+        stepBadge: "PASO 1 DE 2",
+        connectTitle: "Conectar fuentes de ingresos",
+        connectSub: "Sincroniza ingresos para validación cruzada",
+        engineTitle: "Estado del motor 4Crates",
+        engineInfo: "✓ Compara las ventas con los depósitos bancarios reales.",
+        calcBtn: "Calcular SHEEP-Score",
+        userWelcome: "Titular de pasaporte verificado",
+        scoreLabel: "Calificación SHEEP-Score",
+        totalIncome: "Ingresos verificados",
+        defaultRisk: "Riesgo de incumplimiento",
+        chartHeader: "Pronóstico de flujo de caja (IA)",
+        recentActivity: "Actividad reciente verificada",
+        exportBtn: "Exportar pasaporte verificado",
+        downloadBtn: "Descargar pasaporte PDF",
+        bankApproved: "✓ DECISIÓN DE CRÉDITO: APROBADO",
+        bankLoan: "Preaprobado para hipoteca hasta ฿3,500,000 Baht",
+        loansTitle: "Préstamos y cuotas activas",
+        loansSub: "Rastrear solicitudes y pagos mensuales",
+        btnFilterAll: "Todos",
+        btnFilterApplying: "Solicitando",
+        btnFilterRepaying: "Pagando",
+        lblStatusReview: "EN REVISIÓN",
+        lblStatusApproved: "APROBADO",
+        lblStatusRepaying: "EN PAGO",
+        lblStatusUpToDate: "AL DÍA",
+        lblBtnDrawdown: "Retirar fondos",
+        lblBtnPaynow: "Pagar ahora",
+        profileSettings: "Configuración de cuenta y seguridad",
+        navHome: "Inicio", navConnect: "Conectar", navScore: "Puntuación", navLoans: "Créditos", navProfile: "Perfil"
+      },
+      zh: {
+        chooseLang: "选择语言",
+        tagline: "财务护照。<br>有据可查的收入，触手可及的信用。",
+        loginHeader: "账号登录 / 注册",
+        lblFullname: "真实姓名",
+        lblPhone: "手机号码",
+        loginBtn: "登录并开始验证",
+        secFooter: "🔒 符合泰国央行 Sandbox 及 PDPA 数据安全标准",
+        pinTitle: "输入安全 PIN 码",
+        pinSub: "确认身份以访问财务记录",
+        stepBadge: "第 1 步（共 2 步）",
+        connectTitle: "连接收入渠道",
+        connectSub: "同步多渠道收入进行 4Crates 交叉验证",
+        engineTitle: "4Crates 引擎状态",
+        engineInfo: "✓ 将平台销售额与实际银行存款进行匹配，杜绝虚假流水。",
+        calcBtn: "计算 SHEEP 信用分",
+        userWelcome: "已验证护照持有者",
+        scoreLabel: "SHEEP 信用分评级",
+        totalIncome: "已验证月收入",
+        defaultRisk: "违约风险",
+        chartHeader: "现金流预测 (AI)",
+        recentActivity: "最近验证动态",
+        exportBtn: "导出已验证财务护照",
+        downloadBtn: "下载官方 PDF 护照",
+        bankApproved: "✓ 银行审批结果：已批准",
+        bankLoan: "预批复房贷额度高达 ฿3,500,000 泰铢",
+        loansTitle: "申请中的贷款与分期",
+        loansSub: "跟踪贷款申请与每月还款进度",
+        btnFilterAll: "全部",
+        btnFilterApplying: "申请中",
+        btnFilterRepaying: "还款中",
+        lblStatusReview: "审核中",
+        lblStatusApproved: "已批准",
+        lblStatusRepaying: "还款中",
+        lblStatusUpToDate: "正常",
+        lblBtnDrawdown: "提取资金",
+        lblBtnPaynow: "立即还款",
+        profileSettings: "账户与安全设置",
+        navHome: "首页", navConnect: "连接", navScore: "信用分", navLoans: "贷款/分期", navProfile: "个人中心"
+      },
+      ru: {
+        chooseLang: "ВЫБЕРИТЕ ЯЗЫК",
+        tagline: "Финансовый паспорт.<br>Доход, который можно доказать.",
+        loginHeader: "Вход / Регистрация",
+        lblFullname: "Полное имя",
+        lblPhone: "Номер телефона",
+        loginBtn: "Войти и начать проверку",
+        secFooter: "🔒 Соответствует стандартам Банка Таиланда и PDPA",
+        pinTitle: "Введите PIN-код",
+        pinSub: "Подтвердите личность для доступа",
+        stepBadge: "ШАГ 1 ИЗ 2",
+        connectTitle: "Подключить источники дохода",
+        connectSub: "Синхронизация доходов для проверки 4Crates",
+        engineTitle: "Статус движка 4Crates",
+        engineInfo: "✓ Сопоставляет продажи на платформах с банковскими депозитами.",
+        calcBtn: "Рассчитать SHEEP-Score",
+        userWelcome: "Владелец паспорта",
+        scoreLabel: "Рейтинг SHEEP-Score",
+        totalIncome: "Подтвержденный доход",
+        defaultRisk: "Риск дефолта",
+        chartHeader: "Прогноз денежного потока (ИИ)",
+        recentActivity: "Последняя активность",
+        exportBtn: "Экспорт паспорта",
+        downloadBtn: "Скачать PDF паспорт",
+        bankApproved: "✓ РЕШЕНИЕ БАНКА: ОДОБРЕНО",
+        bankLoan: "Предварительно одобрена ипотека до ฿3,500,000 бат",
+        loansTitle: "Заявки и рассрочки",
+        loansSub: "Отслеживание заявок и ежемесячных платежей",
+        btnFilterAll: "Все",
+        btnFilterApplying: "Заявки",
+        btnFilterRepaying: "Рассрочки",
+        lblStatusReview: "НА РАССМОТРЕНИИ",
+        lblStatusApproved: "ОДОБРЕНО",
+        lblStatusRepaying: "В ПРОЦЕССЕ",
+        lblStatusUpToDate: "В СРОК",
+        lblBtnDrawdown: "Вывести средства",
+        lblBtnPaynow: "Оплатить",
+        profileSettings: "Настройки аккаунта и безопасности",
+        navHome: "Главная", navConnect: "Связь", navScore: "Баллы", navLoans: "Кредиты", navProfile: "Профиль"
+      }
+    };
+
+    // Change Language Function
+    function setLang(langKey) {
+      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const dict = translations[langKey] || translations.en;
+      document.getElementById('txt-choose-lang').innerText = dict.chooseLang;
+      document.getElementById('txt-tagline').innerHTML = dict.tagline;
+      document.getElementById('txt-login-header').innerText = dict.loginHeader;
+      document.getElementById('lbl-fullname').innerText = dict.lblFullname;
+      document.getElementById('lbl-phone').innerText = dict.lblPhone;
+      document.getElementById('lbl-login-btn').innerText = dict.loginBtn;
+      document.getElementById('txt-sec-footer').innerText = dict.secFooter;
+      document.getElementById('txt-pin-title').innerText = dict.pinTitle;
+      document.getElementById('txt-pin-sub').innerText = dict.pinSub;
+      document.getElementById('txt-step-badge').innerText = dict.stepBadge;
+      document.getElementById('txt-connect-title').innerText = dict.connectTitle;
+      document.getElementById('txt-connect-sub').innerText = dict.connectSub;
+      document.getElementById('txt-engine-title').innerText = dict.engineTitle;
+      document.getElementById('txt-engine-info').innerText = dict.engineInfo;
+      document.getElementById('lbl-calc-btn').innerText = dict.calcBtn;
+      document.getElementById('txt-user-welcome').innerText = dict.userWelcome;
+      document.getElementById('txt-score-label').innerText = dict.scoreLabel;
+      document.getElementById('lbl-total-income').innerText = dict.totalIncome;
+      document.getElementById('lbl-default-risk').innerText = dict.defaultRisk;
+      document.getElementById('txt-chart-header').innerText = dict.chartHeader;
+      document.getElementById('txt-recent-activity').innerText = dict.recentActivity;
+      document.getElementById('lbl-export-btn').innerText = dict.exportBtn;
+      document.getElementById('lbl-download-btn').innerText = dict.downloadBtn;
+      document.getElementById('txt-bank-approved').innerText = dict.bankApproved;
+      document.getElementById('txt-bank-loan').innerText = dict.bankLoan;
+      document.getElementById('txt-loans-title').innerText = dict.loansTitle;
+      document.getElementById('txt-loans-sub').innerText = dict.loansSub;
+      document.getElementById('btn-filter-all').innerText = dict.btnFilterAll;
+      document.getElementById('btn-filter-applying').innerText = dict.btnFilterApplying;
+      document.getElementById('btn-filter-repaying').innerText = dict.btnFilterRepaying;
+      if(document.getElementById('lbl-status-review')) document.getElementById('lbl-status-review').innerText = dict.lblStatusReview;
+      if(document.getElementById('lbl-status-approved')) document.getElementById('lbl-status-approved').innerText = dict.lblStatusApproved;
+      if(document.getElementById('lbl-status-repaying')) document.getElementById('lbl-status-repaying').innerText = dict.lblStatusRepaying;
+      if(document.getElementById('lbl-status-up-to-date')) document.getElementById('lbl-status-up-to-date').innerText = dict.lblStatusUpToDate;
+      if(document.getElementById('lbl-btn-drawdown')) document.getElementById('lbl-btn-drawdown').innerText = dict.lblBtnDrawdown;
+      if(document.getElementById('lbl-btn-paynow')) document.getElementById('lbl-btn-paynow').innerText = dict.lblBtnPaynow;
+      if(document.getElementById('txt-profile-settings')) document.getElementById('txt-profile-settings').innerText = dict.profileSettings;
+      document.getElementById('lbl-nav-home').innerText = dict.navHome;
+      document.getElementById('lbl-nav-connect').innerText = dict.navConnect;
+      document.getElementById('lbl-nav-score').innerText = dict.navScore;
+      document.getElementById('lbl-nav-loans').innerText = dict.navLoans;
+      document.getElementById('lbl-nav-profile').innerText = dict.navProfile;
+    }
+
+    // Screen Router Function
+    function goToScreen(screenId) {
+      document.querySelectorAll('.view-screen').forEach(el => el.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      if(screenId === 'screen-login' || screenId === 'screen-pin') document.getElementById('nav-login').classList.add('active');
+      if(screenId === 'screen-connect') document.getElementById('nav-connect').classList.add('active');
+      if(screenId === 'screen-dashboard') {
+        document.getElementById('nav-dashboard').classList.add('active');
+        initChart('3M');
+      }
+      if(screenId === 'screen-loans') document.getElementById('nav-loans').classList.add('active');
+      if(screenId === 'screen-profile') document.getElementById('nav-profile').classList.add('active');
+    }
+
+    // Toggle Passport Views (User vs Bank Simulator)
+    function switchPassportMode(mode) {
+      if(mode === 'b2c') {
+        document.getElementById('passport-view-b2c').style.display = 'block';
+        document.getElementById('passport-view-b2b').style.display = 'none';
+      } else {
+        document.getElementById('passport-view-b2c').style.display = 'none';
+        document.getElementById('passport-view-b2b').style.display = 'block';
+      }
+    }
+
+    // Recalculate SHEEP-Score Dynamically on Toggle Switch Changes
+    function recalculateScore() {
+      const checkboxes = document.querySelectorAll('#screen-connect input[type="checkbox"]');
+      let checkedCount = 0;
+      checkboxes.forEach(cb => { if(cb.checked) checkedCount++; });
+
+      let newScore = 520 + (checkedCount * 86);
+      let newIncome = checkedCount * 41600;
+
+      document.getElementById('num-sheep-score').innerText = newScore;
+      document.getElementById('txt-income-total').innerText = '฿' + newIncome.toLocaleString() + ' / mo';
+      document.getElementById('passport-score').innerText = newScore + ' (Grade A)';
+      document.getElementById('passport-income').innerText = '฿' + newIncome.toLocaleString() + ' / month';
+    }
+
+    // Chart.js Line Graph Initialization
+    let chartInstance = null;
+    function initChart(timeframe) {
+      const ctx = document.getElementById('cashflowChart').getContext('2d');
+      if(chartInstance) chartInstance.destroy();
+
+      let labels = ['Avg', 'M1', 'M2', 'M3'];
+      let dataVals = [118000, 125000, 132000, 128000];
+
+      if(timeframe === '1M') {
+        labels = ['W1', 'W2', 'W3', 'W4'];
+        dataVals = [28000, 32000, 31000, 34000];
+      } else if(timeframe === '6M') {
+        labels = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'];
+        dataVals = [110000, 118000, 125000, 132000, 128000, 135000];
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Income Projection',
+            data: dataVals,
+            borderColor: '#FF4B8B',
+            backgroundColor: 'rgba(255, 75, 139, 0.12)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 3,
+            pointBackgroundColor: '#3D2B28',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+            y: { 
+              grid: { color: 'rgba(0,0,0,0.04)' }, 
+              ticks: { 
+                font: { size: 9 },
+                callback: function(v) { return '฿' + (v/1000) + 'k'; }
+              } 
+            }
+          }
+        }
+      });
+    }
+
+    function updateChart(tf) {
+      initChart(tf);
+    }
+  </script>
+</body>
+</html>
